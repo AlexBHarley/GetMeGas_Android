@@ -12,6 +12,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -72,15 +73,17 @@ public class SplashScreen extends Activity {
     }
 
     private class GetLocalPetrolStations extends AsyncTask<Void, Void, Void>{
+        ArrayList<PetrolStation> petrolStationArrayList;
 
         @Override
         protected Void doInBackground(Void... params) {
             LocationService locationService = new LocationService(getApplicationContext());
             locationService.getCurrentLocation();
 
-            db.getNearPetrolStations(new LatLng(locationService.getCurrentLocation().getLatitude(),
-                                                locationService.getCurrentLocation().getLongitude()
-                                    ));
+            petrolStationArrayList =
+                db.getNearPetrolStations(new LatLng(locationService.getCurrentLocation().getLatitude(),
+                                                    locationService.getCurrentLocation().getLongitude()
+                                        ));
 
             return null;
         }

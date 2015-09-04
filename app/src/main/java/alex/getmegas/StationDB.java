@@ -2,11 +2,14 @@ package alex.getmegas;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 
 import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
 
 /**
  * Created by alex on 3/09/15.
@@ -29,7 +32,6 @@ public class StationDB extends SQLiteOpenHelper {
     public StationDB(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
-
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -69,18 +71,16 @@ public class StationDB extends SQLiteOpenHelper {
         db.insert(STATIONS, null, cv);
     }
 
-    public PetrolStation[] getNearPetrolStations(LatLng currentLocation){
+    public ArrayList<PetrolStation> getNearPetrolStations(LatLng currentLocation){
         final double mult = 1; // mult = 1.1; is more reliable
         final int radius = 100;
         SQLiteDatabase db = this.getReadableDatabase();
-        PetrolStation[] petrolStationArray = new PetrolStation[15];
-
+        ArrayList<PetrolStation> petrolStationArray = new ArrayList<PetrolStation>();
 
         LatLng p1 = Utils.calculateDerivedPosition(currentLocation, mult * radius, 0);
         LatLng p2 = Utils.calculateDerivedPosition(currentLocation, mult * radius, 90);
         LatLng p3 = Utils.calculateDerivedPosition(currentLocation, mult * radius, 180);
         LatLng p4 = Utils.calculateDerivedPosition(currentLocation, mult * radius, 270);
-
 
         String strWhere =  " WHERE "
                 + LAT + " > " + String.valueOf(p3.latitude) + " AND "
@@ -89,8 +89,36 @@ public class StationDB extends SQLiteOpenHelper {
                 + LNG + " > " + String.valueOf(p4.longitude);
         db.execSQL("SELECT * FROM " +
                     STATIONS + " " +
-                        strWhere
+                        strWhere + ";"
         );
+
+        Cursor c = db.rawQuery("SELECT * FROM " +
+                                STATIONS + " " +
+                                strWhere, null);
+
+        if (c .moveToFirst()) {
+            while (c.isAfterLast() == false) {
+                LatLng petrolStationLocation = new
+                        LatLng(Float.parseFloat(c.getString(8)), Float.parseFloat(c.getString(9)));
+                if (Utils.pointIsInCircle(petrolStationLocation, currentLocation, radius)) {
+                    PetrolStation station = new PetrolStation();
+
+                    station.setName(c.getString(1));
+                    station.setAttributes(c.getString(2));
+                    station.setWebsiteURL(c.getString(3));
+                    station.setAddress(c.getString(4));
+                    station.setPhoneNumber(c.getString(5));
+                    station.setOpeningHours(c.getString(6));
+                    station.setLat(c.getString(8));
+                    station.setLng(c.getString(9));
+                    station.setFacebookURL(c.getString(15));
+
+                    petrolStationArray.add(station);
+                }
+                c.moveToNext();
+            }
+        }
+
         return petrolStationArray;
     }
 }
