@@ -1,4 +1,4 @@
-package alex.getmegas;
+package alex.getmegas.objects;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -10,8 +10,8 @@ import java.net.URL;
 public class PetrolStation {
     private String name;
     private String attributes;
-    private String lat;
-    private String lng;
+    private Double lat;
+    private Double lng;
     private String openingHours;
     private String address;
     private String phoneNumber;
@@ -77,19 +77,19 @@ public class PetrolStation {
         this.name = name;
     }
 
-    public String getLat() {
+    public Double getLat() {
         return lat;
     }
 
     public void setLat(String lat) {
-        this.lat = lat;
+        this.lat = Double.parseDouble(lat);
     }
 
-    public String getLng() {
+    public Double getLng() {
         return lng;
     }
 
     public void setLng(String lng) {
-        this.lng = lng;
+        this.lng = Double.parseDouble(lng);
     }
 }

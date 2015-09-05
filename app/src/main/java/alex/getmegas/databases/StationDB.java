@@ -1,15 +1,19 @@
-package alex.getmegas;
+package alex.getmegas.databases;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.location.Location;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import java.util.ArrayList;
+import java.util.PriorityQueue;
+
+import alex.getmegas.Utils.Utils;
+import alex.getmegas.objects.PetrolObject;
+import alex.getmegas.objects.PetrolStation;
 
 /**
  * Created by alex on 3/09/15.
@@ -17,7 +21,7 @@ import java.util.ArrayList;
 public class StationDB extends SQLiteOpenHelper {
     private final static String DB_NAME = "STATIONDB";
     private final static int DB_VERSION = 1;
-    private final static String STATIONS = "stations";
+    private final static String STATIONS = "stations1";
     private final static String ID = "ID";
     private final static String NAME = "NAME";
     private final static String ATTRIBUTES = "ATTRIBUTES";
@@ -67,15 +71,15 @@ public class StationDB extends SQLiteOpenHelper {
         cv.put(LNG, station.getLng());
         cv.put(FB_LINK, station.getFacebookURL());
         cv.put(URL, station.getWebsiteURL());
-
         db.insert(STATIONS, null, cv);
     }
 
-    public ArrayList<PetrolStation> getNearPetrolStations(LatLng currentLocation){
-        final double mult = 1; // mult = 1.1; is more reliable
-        final int radius = 100;
+    public PriorityQueue<PetrolObject> getNearPetrolStations(LatLng currentLocation){
+        final double mult = 2; // mult = 1.1; is more reliable
+        final int radius = 1000000;
         SQLiteDatabase db = this.getReadableDatabase();
-        ArrayList<PetrolStation> petrolStationArray = new ArrayList<PetrolStation>();
+        PetrolObject object;
+        PriorityQueue<PetrolObject> priorityQueue = new PriorityQueue<PetrolObject>();
 
         LatLng p1 = Utils.calculateDerivedPosition(currentLocation, mult * radius, 0);
         LatLng p2 = Utils.calculateDerivedPosition(currentLocation, mult * radius, 90);
@@ -87,19 +91,42 @@ public class StationDB extends SQLiteOpenHelper {
                 + LAT + " < " + String.valueOf(p1.latitude) + " AND "
                 + LNG + " < " + String.valueOf(p2.longitude) + " AND "
                 + LNG + " > " + String.valueOf(p4.longitude);
-        db.execSQL("SELECT * FROM " +
-                    STATIONS + " " +
-                        strWhere + ";"
-        );
 
         Cursor c = db.rawQuery("SELECT * FROM " +
-                                STATIONS + " " +
+                                STATIONS +
                                 strWhere, null);
+        Log.d("Query", "SELECT * FROM " + STATIONS + strWhere);
+        Log.d("Amount", c.getCount() + "");
 
-        if (c .moveToFirst()) {
+        if(c.moveToFirst()) {
+            Log.d("Move to first", "True");
+
+            do {
+                PetrolStation station = new PetrolStation();
+
+                station.setName(c.getString(1));
+                station.setAttributes(c.getString(2));
+                station.setWebsiteURL(c.getString(3));
+                station.setAddress(c.getString(4));
+                station.setPhoneNumber(c.getString(5));
+                station.setOpeningHours(c.getString(3));
+                station.setLat(c.getString(7));
+                station.setLng(c.getString(8));
+                station.setFacebookURL(c.getString(9));
+
+                double distance = Utils.getDistanceBetweenTwoPoints(currentLocation,
+                        new LatLng(station.getLat(), station.getLng()));
+
+                object = new PetrolObject(distance, station);
+
+                priorityQueue.add(object);
+            } while (c.moveToNext());
+        }
+        /*
+        if (c.moveToFirst()) {
             while (c.isAfterLast() == false) {
                 LatLng petrolStationLocation = new
-                        LatLng(Float.parseFloat(c.getString(8)), Float.parseFloat(c.getString(9)));
+                        LatLng(Float.parseFloat(c.getString(7)), Float.parseFloat(c.getString(8)));
                 if (Utils.pointIsInCircle(petrolStationLocation, currentLocation, radius)) {
                     PetrolStation station = new PetrolStation();
 
@@ -108,17 +135,44 @@ public class StationDB extends SQLiteOpenHelper {
                     station.setWebsiteURL(c.getString(3));
                     station.setAddress(c.getString(4));
                     station.setPhoneNumber(c.getString(5));
-                    station.setOpeningHours(c.getString(6));
-                    station.setLat(c.getString(8));
-                    station.setLng(c.getString(9));
-                    station.setFacebookURL(c.getString(15));
+                    station.setOpeningHours(c.getString(3));
+                    station.setLat(c.getString(7));
+                    station.setLng(c.getString(8));
+                    station.setFacebookURL(c.getString(9));
 
-                    petrolStationArray.add(station);
+                    double distance = Utils.getDistanceBetweenTwoPoints(currentLocation,
+                            new LatLng(station.getLat(), station.getLng()));
+
+                    object = new PetrolObject(distance, station);
+
+                    priorityQueue.add(object);
                 }
                 c.moveToNext();
             }
         }
+        */
 
-        return petrolStationArray;
+        return priorityQueue;
+    }
+
+    public void get100Results(){
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        String query = "select * from " + STATIONS;
+        Cursor c = sqLiteDatabase.rawQuery(query, null);
+
+        c.moveToFirst();
+        do{
+            String s = c.getString(1) +
+                    c.getString(2) + " " +
+            c.getString(3)+ " " +
+            c.getString(4)+ " " +
+            c.getString(5)+ " " +
+            c.getString(6)+ " " +
+                    c.getString(7)+ " " +
+            c.getString(8)+ " " +
+            c.getString(9)+ " ";
+
+            Log.d("Result", s);
+        } while(c.moveToNext());
     }
 }

@@ -26,7 +26,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".SplashScreen"
+            android:name=".actvities.SplashScreen"
             android:label="Splash" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,7 +36,7 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".actvities.MainActivity"
             android:label="MainActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

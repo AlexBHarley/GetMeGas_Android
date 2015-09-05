@@ -1,16 +1,14 @@
-package alex.getmegas;
-
-import android.util.Log;
-import android.widget.Toast;
+package alex.getmegas.Utils;
 
 import com.opencsv.CSVReader;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import alex.getmegas.databases.StationDB;
+import alex.getmegas.objects.PetrolStation;
 
 /**
  * Created by alex on 4/09/15.
@@ -21,7 +19,6 @@ public class CSVOperations {
 
     public CSVOperations(InputStream inputStream) {
         this.inputStream = inputStream;
-        ;
     }
 
 

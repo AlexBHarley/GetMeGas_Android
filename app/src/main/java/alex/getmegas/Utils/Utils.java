@@ -1,4 +1,4 @@
-package alex.getmegas;
+package alex.getmegas.Utils;
 
 import android.content.ContextWrapper;
 import android.graphics.Point;
