@@ -54,7 +54,6 @@ public class SplashScreen extends Activity implements LocationListener{
         ButterKnife.bind(this);
 
         db = new StationDB(this);
-        db.get100Results();
         InputStream inputStream = getResources().openRawResource(R.raw.petrol_station);
         csvOperations = new CSVOperations(inputStream);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -111,14 +110,16 @@ public class SplashScreen extends Activity implements LocationListener{
     }
 
     private class GetLocalPetrolStations extends AsyncTask<Void, Void, Void>{
-        PriorityQueue<PetrolObject> petrolStations;
+        ArrayList<PetrolStation> petrolStations;
 
         @Override
         protected Void doInBackground(Void... params) {
             Log.d("Current location:", lat + ", " + lng);
-            petrolStations =
-                db.getNearPetrolStations(new LatLng(lat, lng));
-
+            petrolStations = db.get100Results();
+            //petrolStations =
+            //        db.getStation(new LatLng(lat, lng));
+                //db.getNearPetrolStations(new LatLng(lat, lng));
+            Log.d("Petrol stations:", petrolStations.size() + "");
             return null;
         }
 
@@ -128,13 +129,16 @@ public class SplashScreen extends Activity implements LocationListener{
 
             ArrayList<PetrolStation> petrolStationArrayList = new ArrayList<>();
 
-            for(PetrolObject p : petrolStations){
-                petrolStationArrayList.add(p.getStation());
+            for(PetrolStation p : petrolStations){
+                LatLng current = new LatLng(lat, lng);
+                LatLng dest = new LatLng(p.getLat(), p.getLng());
+                Log.d("Dest latlng",p.getName() + " " + p.getAddress() + " " + dest.latitude + " " + dest.longitude);
+                Log.d("Current latlng", current.latitude +" "+ current.longitude);
+                if(Utils.pointIsInCircle(current, dest, 1000)) {
+                    petrolStationArrayList.add(p);
+                }
             }
-            Toast.makeText(getApplicationContext(), petrolStationArrayList.size() + "", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(SplashScreen.this, MainActivity.class);
-            //intent.putExtras(new Bundle())
-            startActivity(intent);
+            Log.d("Close stations", petrolStationArrayList.size() + "");
         }
     }
 

@@ -6,9 +6,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.ArrayList;
 import java.util.PriorityQueue;
 
 import alex.getmegas.Utils.Utils;
@@ -155,13 +157,15 @@ public class StationDB extends SQLiteOpenHelper {
         return priorityQueue;
     }
 
-    public void get100Results(){
+    public ArrayList get100Results(){
         SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
         String query = "select * from " + STATIONS;
         Cursor c = sqLiteDatabase.rawQuery(query, null);
-
+        ArrayList<PetrolStation> p = new ArrayList<>();
         c.moveToFirst();
         do{
+            PetrolStation station = new PetrolStation();
+            /*
             String s = c.getString(1) +
                     c.getString(2) + " " +
             c.getString(3)+ " " +
@@ -173,6 +177,53 @@ public class StationDB extends SQLiteOpenHelper {
             c.getString(9)+ " ";
 
             Log.d("Result", s);
+            */
+            station.setName(c.getString(1));
+            station.setAttributes(c.getString(2));
+            station.setWebsiteURL(c.getString(3));
+            station.setAddress(c.getString(4));
+            station.setPhoneNumber(c.getString(5));
+            station.setOpeningHours(c.getString(6));
+            station.setLat(c.getString(7));
+            station.setLng(c.getString(8));
+            station.setFacebookURL(c.getString(9));
+            p.add(station);
         } while(c.moveToNext());
+        return p;
+    }
+
+    public PriorityQueue<PetrolObject> getStation(LatLng currentLocation){
+        SQLiteDatabase db = this.getReadableDatabase();
+        PriorityQueue<PetrolObject> petrolObjects = new PriorityQueue<>();
+        Cursor c = db.rawQuery("select * from " + STATIONS, null);
+        Log.d("Cursor length", c.getCount() + "");
+        if(c.moveToFirst()){
+            do{
+                double lat = Double.parseDouble(c.getString(7));
+                double lng = Double.parseDouble(c.getString(8));
+                LatLng dest = new LatLng(lat, lng);
+                if(Utils.pointIsInCircle(new LatLng(lat, lng), currentLocation, 10000)){
+                    PetrolStation station = new PetrolStation();
+
+                    station.setName(c.getString(1));
+                    station.setAttributes(c.getString(2));
+                    station.setWebsiteURL(c.getString(3));
+                    station.setAddress(c.getString(4));
+                    station.setPhoneNumber(c.getString(5));
+                    station.setOpeningHours(c.getString(3));
+                    station.setLat(c.getString(7));
+                    station.setLng(c.getString(8));
+                    station.setFacebookURL(c.getString(9));
+
+                    petrolObjects.add(new PetrolObject(Utils.getDistanceBetweenTwoPoints(dest, currentLocation),
+                            station));
+                }
+
+
+
+            } while (c.moveToNext());
+        }
+        Log.d("PetrolObjectListLength", petrolObjects.size() + "");
+        return petrolObjects;
     }
 }
